@@ -4,5 +4,5 @@
 set -e
 cd "$(dirname "$0")"
 mkdir -p bin
-find ./src -name *.java | javac -d bin -classpath "lib/antlr-4.8-complete.jar" @/dev/stdin
+find ./src -name *.java | javac -d bin -classpath "./lib/commons-lang3-3.8.1.jar:./lib/commons-text-1.6.jar:./lib/antlr-4.8-complete.jar" @/dev/stdin
 

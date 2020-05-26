@@ -248,7 +248,7 @@ public class IRBuilder implements ASTVisitor {
         Operand cond = (node.getCond() == null) ? new Const(1) : change(node.getCond().getResultOpr());
         currentBB.addLastInstruction(new Branch(currentBB, true, cond, bodyBB, outBB));
         currentBB = bodyBB;
-        node.getStatList().accept(this);
+        if (node.getStatList() != null) node.getStatList().accept(this);
         currentBB.addLastInstruction(new Jump(currentBB, true, condBB));
         currentBB = outBB;
         loopContinue.pop();
@@ -274,7 +274,7 @@ public class IRBuilder implements ASTVisitor {
         else {
             currentBB.addInstruction(new Return(currentBB, true, null));
         }
-        funcRets.add(((Return) currentBB.getTail()));
+        if (currentBB.getTail() instanceof Return) funcRets.add(((Return) currentBB.getTail()));
     }
 
     @Override
@@ -286,7 +286,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(BlockStatNode node) {
         if (node.getStat() != null) {
             for (var i : node.getStat()) {
-                i.accept(this);
+                if (i != null) i.accept(this);
             }
         }
     }

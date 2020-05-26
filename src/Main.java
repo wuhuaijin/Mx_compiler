@@ -60,7 +60,7 @@ public class Main {
             globalVarResolve.run();
 
             IRPrinter irPrinter = new IRPrinter(new PrintStream("ir.txt"));
-            irPrinter.visit(ir.getModule());
+//            irPrinter.visit(ir.getModule());
 
 //            IRInterpreter.main("ir.txt", System.out, new FileInputStream("test.in"), false);
 

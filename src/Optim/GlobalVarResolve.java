@@ -98,7 +98,14 @@ public class GlobalVarResolve {
         for (var func : funcList) {
             var tmpMap = tmpVarMapInFunc.get(func);
             for (var i : globalVarInFunc.get(func)) {
-                func.getInBB().addInstructionAtFront(new Load(func.getInBB(), false, tmpMap.get(i), i));
+                if(func.getFuncName().equals("__init")){
+                    var tmp = func.getInBB().getHead();
+                    while(!(tmp instanceof Store) || ((Store) tmp).getPointer() != i) tmp = tmp.getNext();
+                    tmp.pushBack(new Load(func.getInBB(), false, tmpMap.get(i), i));
+                }
+                else {
+                    func.getInBB().addInstructionAtFront(new Load(func.getInBB(), false, tmpMap.get(i), i));
+                }
                 func.getOutBB().getTail().pushFront(new Store(func.getOutBB(), false, tmpMap.get(i), i));
             }
         }

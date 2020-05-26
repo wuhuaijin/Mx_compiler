@@ -274,6 +274,7 @@ public class IRBuilder implements ASTVisitor {
         else {
             currentBB.addInstruction(new Return(currentBB, true, null));
         }
+
         if (currentBB.getTail() instanceof Return) funcRets.add(((Return) currentBB.getTail()));
     }
 
@@ -513,13 +514,13 @@ public class IRBuilder implements ASTVisitor {
             }
             case sub: {
                 Operand res = new Int32("res");
-                currentBB.addInstruction(new UnaryOp(currentBB, false, res, val, UnaryOp.Op.NEG));
+                currentBB.addInstruction(new UnaryOp(currentBB, false, res, change(val), UnaryOp.Op.NEG));
                 node.setResultOpr(res);
                 break;
             }
             case bitnot: {
                 Operand res = new Int32("res");
-                currentBB.addInstruction(new UnaryOp(currentBB, false, res, val, UnaryOp.Op.NOT));
+                currentBB.addInstruction(new UnaryOp(currentBB, false, res, change(val), UnaryOp.Op.NOT));
                 node.setResultOpr(res);
                 break;
             }

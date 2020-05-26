@@ -103,6 +103,10 @@ public class BB {
             tail.setNext(instruction);
             instruction.setPrev(tail);
             tail = instruction;
+        } else if (tail.getNext() == null) {
+            tail.setNext(instruction);
+            instruction.setPrev(tail);
+            tail = instruction;
         }
         instruction.setBasicBlock(this);
     }

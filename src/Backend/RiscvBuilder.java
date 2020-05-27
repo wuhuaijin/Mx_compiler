@@ -195,9 +195,9 @@ public class RiscvBuilder implements IRVisitor {
             case xor:
             case add: {
                 if (rs1 instanceof Const && rs2 instanceof Const) {
-//                    System.out.println("fuck");
-//                    System.out.println(rs1);
-//                    System.out.println(rs2);
+                    if (inst.getOp() == BinaryOp.Op.add)
+                        curbb.addInst(new LI((Register) rd, new Const(((Const) rs1).getValue() + ((Const) rs2).getValue())));
+                    break;
                 }
                 if (rs1 instanceof Const && !(rs2 instanceof Const)) {
                     Operand tmp = rs1;
@@ -222,6 +222,10 @@ public class RiscvBuilder implements IRVisitor {
                 break;
             }
             case mul:
+                if (rs1 instanceof Const && rs2 instanceof Const)
+                    curbb.addInst(new LI((Register) rd, new Const(((Const) rs1).getValue() * ((Const) rs2).getValue())));
+                else curbb.addInst(new RegAction(toReg(rs1), toReg(rs2), rd, op_R));
+                break;
             case div:
             case mod:
                 curbb.addInst(new RegAction(toReg(rs1), toReg(rs2), rd, op_R));
@@ -261,35 +265,49 @@ public class RiscvBuilder implements IRVisitor {
                 break;
         }
 
-        Register lhs = toReg(rs1);
-        Register rhs = toReg(rs2);
+
 
         switch (inst.getOp()) {
-            case slt:
+            case slt: {
+                Register lhs = toReg(rs1);
+                Register rhs = toReg(rs2);
                 curbb.addInst(new RegAction(lhs, rhs, rd, RegAction.Op.SLT));
                 break;
+            }
             case sle:{
+                Register lhs = toReg(rs1);
+                Register rhs = toReg(rs2);
                 Int32 tmp = new Int32("tmple");
                 curbb.addInst(new RegAction(rhs, lhs, tmp, RegAction.Op.SLT));
                 curbb.addInst(new ImmAction(tmp, rd, ImmAction.Op.XORI, new Const(1)));
                 break;
             }
-            case sgt:
+            case sgt: {
+                Register lhs = toReg(rs1);
+                Register rhs = toReg(rs2);
+                Int32 tmp = new Int32("tmpge");
                 curbb.addInst(new RegAction(rhs, lhs, rd, RegAction.Op.SLT));
                 break;
+            }
             case sge:{
+                Register lhs = toReg(rs1);
+                Register rhs = toReg(rs2);
                 Int32 tmp = new Int32("tmpge");
                 curbb.addInst(new RegAction(lhs, rhs, tmp, RegAction.Op.SLT));
                 curbb.addInst(new ImmAction(tmp, rd, ImmAction.Op.XORI, new Const(1)));
                 break;
             }
             case seq: {
+                Register lhs = toReg(rs1);
+                Register rhs = toReg(rs2);
                 Int32 tmp = new Int32("tmpeq");
                 curbb.addInst(new RegAction(rhs, lhs, tmp, RegAction.Op.SUB));
                 curbb.addInst(new ImmAction(tmp, rd, ImmAction.Op.SLTIU, new Const(1)));
                 break;
             }
             case sne: {
+                Register lhs = toReg(rs1);
+                Register rhs = toReg(rs2);
                 Int32 tmp = new Int32("tmpneq");
                 curbb.addInst(new RegAction(rhs, lhs, tmp, RegAction.Op.SUB));
                 curbb.addInst(new RegAction(module.getPhyRegisterHashMap().get("zero"), tmp, rd, RegAction.Op.SLTU));

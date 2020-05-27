@@ -14,11 +14,28 @@ public class BackBB {
 
     private List<BackBB> successors;
     private List<BackBB> precessors;
+    private BackBB parent;
 
     private Set<Register> use = new HashSet<>();
     private Set<Register> def = new HashSet<>();
     private Set<Register> liveIn = new HashSet<>();
     private Set<Register> liveOut = new HashSet<>();
+
+    public BackBB getParent() {
+        return parent;
+    }
+
+    public void setParent(BackBB parent) {
+        this.parent = parent;
+    }
+
+    public void setLiveIn(Set<Register> liveIn) {
+        this.liveIn = liveIn;
+    }
+
+    public void setLiveOut(Set<Register> liveOut) {
+        this.liveOut = liveOut;
+    }
 
     public List<BackBB> getSuccessors() {
         return successors;
@@ -60,6 +77,18 @@ public class BackBB {
         return id;
     }
 
+
+    public int dfn;
+    public List<BackBB> bucket = new ArrayList<>();
+    public BackBB ancestor;
+    public BackBB best;
+
+    public BackBB semiDom;
+    public BackBB sameDom;
+    public BackBB iDom; 		// i.e. parent in dominator tree
+    public List<BackBB> iDomChildren = new ArrayList<>();
+    
+    
     public void addInst(Inst inst) {
         inst.setBb(this);
         if (head == null) {

@@ -11,6 +11,7 @@ import Helper.SyntaxException;
 import IR.*;
 import Optim.FuncInline;
 import Optim.GlobalVarResolve;
+import Optim.Pass;
 import Optim.PeepholeOptim;
 import Parser.*;
 
@@ -58,9 +59,10 @@ public class Main {
 //            funcInline.run();
             GlobalVarResolve globalVarResolve = new GlobalVarResolve(module);
             globalVarResolve.run();
+            new Pass(ir.getModule()).run();
 
             IRPrinter irPrinter = new IRPrinter(new PrintStream("ir.txt"));
-//            irPrinter.visit(ir.getModule());
+            irPrinter.visit(ir.getModule());
 
 //            IRInterpreter.main("ir.txt", System.out, new FileInputStream("test.in"), false);
 

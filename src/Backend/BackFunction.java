@@ -12,6 +12,7 @@ public class BackFunction {
     private BackBB outbb;
     public int stackSize;
 
+
     private List<BackBB> bbList = new ArrayList<>();
 
     public BackFunction(String id, boolean isSystem) {
@@ -79,6 +80,7 @@ public class BackFunction {
             bb.setPrecessors(new ArrayList<>(Collections.singleton(prebb)));
         }
         else bb.setPrecessors(new ArrayList<>());
+        bb.setParent(prebb);
         visited.add(bb);
         bbList.add(bb);
         findSuccessors(bb);

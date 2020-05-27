@@ -4,6 +4,7 @@ import Backend.Inst.*;
 import IR.Operand.Int32;
 import IR.Operand.Register;
 import IR.Operand.StackAllocate;
+import IR.Operand.VirtualRegister;
 
 import javax.print.DocFlavor;
 import java.util.*;
@@ -28,33 +29,32 @@ public class RegAllocator {
 
         @Override
         public int hashCode() {
-            return u.hashCode() ^ v.hashCode();
+            return Objects.hash(u,v );
         }
     }
 
-    private static final int MAX_DEG = 0x3f3f3f3f;
+    private static final int MAX_DEG = 0x7fffffff;
     private int k = 28; // allocatable size
     private BackModule module;
 
-    private Set<Register> preColored = new HashSet<>();
-    private Set<Register> initial = new HashSet<>();
-    private Set<Register> simplifyWorkList = new HashSet<>();
-    private Set<Register> freezeWorkList = new HashSet<>();
-    private Set<Register> spillWorkList = new HashSet<>();
-    private Set<Register> spilledNodes = new HashSet<>();
-    private Set<Register> coalescedNodes = new HashSet<>();
-    private Set<Register> coloredNodes = new HashSet<>();
+    private Set<Register> preColored = new LinkedHashSet<>();
+    private Set<Register> initial = new LinkedHashSet<>();
+    private Set<Register> simplifyWorkList = new LinkedHashSet<>();
+    private Set<Register> freezeWorkList = new LinkedHashSet<>();
+    private Set<Register> spillWorkList = new LinkedHashSet<>();
+    private Set<Register> spilledNodes = new LinkedHashSet<>();
+    private Set<Register> coalescedNodes = new LinkedHashSet<>();
+    private Set<Register> coloredNodes = new LinkedHashSet<>();
 
     private Stack<Register> selectStack = new Stack<>();
 
-    private Set<Move> workListMoves = new HashSet<>();
-    private Set<Move> frozenMoves = new HashSet<>();
-    private Set<Move> constrainedMoves = new HashSet<>();
-    private Set<Move> activeMoves = new HashSet<>();
-    private Set<Move> coalescedMoves = new HashSet<>();
+    private Set<Move> workListMoves = new LinkedHashSet<>();
+    private Set<Move> frozenMoves = new LinkedHashSet<>();
+    private Set<Move> constrainedMoves = new LinkedHashSet<>();
+    private Set<Move> activeMoves = new LinkedHashSet<>();
+    private Set<Move> coalescedMoves = new LinkedHashSet<>();
 
-    private Set<Edge> adjSet = new HashSet<>();
-
+    private Set<Edge> adjSet = new LinkedHashSet<>();
 
     public RegAllocator(BackModule module) {
         this.module = module;
@@ -73,9 +73,20 @@ public class RegAllocator {
             new LiveAnalysis(func, module).run();
             build(func);
             makeWorkList();
+//            int number = 0;
             while (!simplifyWorkList.isEmpty() || !workListMoves.isEmpty() || !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()){
 //                if (!selectStack.isEmpty()) {
 //                    int a = 1;
+//                }
+//                if (number < 100) {
+//                    System.out.print(simplifyWorkList.size());
+//                    System.out.print(" ");
+//                    System.out.print(workListMoves.size());
+//                    System.out.print(" ");
+//                    System.out.print(freezeWorkList.size());
+//                    System.out.print(" ");
+//                    System.out.print(spillWorkList.size());
+//                    System.out.println(" ");
 //                }
                 if (!simplifyWorkList.isEmpty()) simplify();
                 else if (!workListMoves.isEmpty()) coalesce();
@@ -84,7 +95,10 @@ public class RegAllocator {
 //                if (func.getId().equals("main")) {
 //                    int a = 0;
 //                }
+//                number++;
             }
+//            System.out.println("++");
+//            System.out.println(number);
             assignColors();
             if (!spilledNodes.isEmpty()) {
                 rewriteProgram(func);
@@ -93,6 +107,7 @@ public class RegAllocator {
         }
         allocate(func);
     }
+    
 
     public void init() {
         initial.clear();
@@ -127,14 +142,24 @@ public class RegAllocator {
     }
 
     public void build(BackFunction function) {
+//        int number = 0;
         for (var bb : function.getBbList()) {
             for (var inst = bb.getHead(); inst != null; inst = inst.getNext()) {
+                if (function.getId().equals("main")){
+//                    System.out.println(inst);
+//                    number++;
+//                    if (number < 100){
+////                        System.out.println(inst);
+//                    }
+                }
                 if (inst.getDefReg() != null ) initial.add(inst.getDefReg());
                 var k = inst.getUseReg();
                 initial.addAll(inst.getUseReg());
 //                int a = 0;
             }
         }
+//        System.out.println(number);
+//        int a = initial.size();
         for (var i : module.getPhyRegName()) {
             var reg = module.getPhyRegisterHashMap().get(i);
             reg.color = i;
@@ -160,6 +185,7 @@ public class RegAllocator {
             reg.degree = 0;
             reg.color = null;
         }
+//        int count = 0;
         for (var bb : function.getBbList()) {
             Set<Register> live = new HashSet<>(bb.getLiveOut());
             for (var inst = bb.getTail(); inst != null; inst = inst.getPrev()) {
@@ -186,6 +212,11 @@ public class RegAllocator {
 
                 for (var def :defs) {
                     for (var l : live) {
+//                        if (count < 100) {
+////                            System.out.println(def.getId());
+////                            System.out.println(l.getId());
+//                        }
+//                        count++;
                         addEdge(def, l);
                     }
                 }
@@ -386,8 +417,12 @@ public class RegAllocator {
         freezeMoves(reg);
     }
 
-    private void selectSpill() {
-        var reg = spillWorkList.iterator().next();
+
+
+    private void selectSpill(){
+        // random policy
+		var reg = spillWorkList.iterator().next();
+        assert reg != null;
         spillWorkList.remove(reg);
         simplifyWorkList.add(reg);
         freezeMoves(reg);
@@ -468,13 +503,7 @@ public class RegAllocator {
     public void allocate(BackFunction function) {
         for (var bb : function.getBbList()) {
             for (var inst = bb.getHead(); inst != null; inst = inst.getNext()) {
-                if (inst instanceof LI) {
-                    int a = 0;
-                }
                 for (var reg : inst.getUseReg()) {
-                    if (inst instanceof Move) {
-                        int p = 0;
-                    }
                     if (!(reg instanceof PhyRegister) && reg.color != null) {
                         inst.replaceUseReg(reg, module.getPhyRegisterHashMap().get(reg.color));
                     }
@@ -486,7 +515,6 @@ public class RegAllocator {
             }
         }
     }
-
 
 
 }

@@ -1,8 +1,10 @@
 package IR;
 
 import Frontend.Scope;
+import IR.Instruction.BinaryOp;
 import IR.Instruction.Load;
 import IR.Instruction.Return;
+import IR.Operand.Const;
 import IR.Operand.Int32;
 import SymbolTable.Symbol.FuncSymbol;
 import SymbolTable.Symbol.VarSymbol;
@@ -101,7 +103,10 @@ public class SystemFunc {
         ArraySize = newArrayMethod(module, "size");
         Int32 obj = new Int32("obj"), ret = new Int32("ret");
         BB bb = new BB(Lable.getLable());
-        bb.addInstruction(new Load(bb, false, ret, obj));
+        Int32 tmp = new Int32("tmp");
+        bb.addInstruction(new BinaryOp(bb, false, BinaryOp.Op.sub, obj, new Const(4), tmp));
+        bb.addInstruction(new Load(bb, false, ret, tmp));
+
         bb.addLastInstruction(new Return(bb, true, ret));
         ArraySize.setInBB(bb);
         ArraySize.setOutBB(bb);

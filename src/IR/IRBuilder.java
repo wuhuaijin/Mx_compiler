@@ -374,12 +374,15 @@ public class IRBuilder implements ASTVisitor {
         if (result instanceof Int32) {
             currentBB.addInstruction(new Allocate(currentBB, false, spaceIncludeSize, result));
             currentBB.addInstruction(new Store(currentBB, false, size, result));
+            currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, result, new Const(4), result));
         }
         else {
+            //todo : maybe exist a bug
             Operand tmp = new Int32("tmp");
             currentBB.addInstruction(new Allocate(currentBB, false, spaceIncludeSize, tmp));
 //            currentBB.addInstruction(new Store(currentBB, false, size, tmp));
             currentBB.addInstruction(new Store(currentBB, false, tmp, result));
+            currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, tmp, new Const(4), tmp));
         }
         if (curdim != dim - 1) {
             BB condBB = new BB(Lable.getLable());
@@ -444,8 +447,8 @@ public class IRBuilder implements ASTVisitor {
         Int32 tmpoffset = new Int32("tmp_offset");
         Pointer resAddr = new Pointer("res_addr");
         int size = node.getType() instanceof ArrayType ? 4 : node.getType().getSize();
-        currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, indexVal, new Const(1), tmpindex));
-        currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.mul, tmpindex, new Const(size), tmpoffset));
+//        currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, indexVal, new Const(1), tmpindex));
+        currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.mul, indexVal, new Const(size), tmpoffset));
         currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, tmpoffset, baseAddr, resAddr));
         node.setResultOpr(resAddr);
     }

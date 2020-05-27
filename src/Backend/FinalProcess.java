@@ -20,6 +20,7 @@ public class FinalProcess {
         for (var func : module.getFunctionList()) {
             if (!func.isSystem()) {
                 int a = func.getRealStackSize();
+                if (a > 2047) a = 2000;
                 func.getInbb().getHead().pushFront(new ImmAction(module.getPhyRegisterHashMap().get("sp"), module.getPhyRegisterHashMap().get("sp"), ImmAction.Op.ADDI, new Const(-a)));
                 func.getOutbb().getTail().pushFront(new ImmAction(module.getPhyRegisterHashMap().get("sp"), module.getPhyRegisterHashMap().get("sp"), ImmAction.Op.ADDI, new Const(a)));
             }

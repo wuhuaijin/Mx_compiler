@@ -173,7 +173,7 @@ public class RiscvBuilder implements IRVisitor {
                 break;
             case xor:
                 op_I = ImmAction.Op.XORI;
-                op_R = RegAction.Op.OR;
+                op_R = RegAction.Op.XOR;
                 break;
             case mod:
                 op_R = RegAction.Op.REM;

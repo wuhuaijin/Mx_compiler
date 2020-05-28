@@ -102,6 +102,7 @@ public class RiscvBuilder implements IRVisitor {
             return str;
         }
         else if (opr instanceof Const) {
+//            if(((Const) opr).getValue() == 0) return module.getPhyRegisterHashMap().get("zero");
             VirtualRegister imm = new VirtualRegister("imm");
             curbb.addInst(new LI(imm, (Const) opr));
             return imm;

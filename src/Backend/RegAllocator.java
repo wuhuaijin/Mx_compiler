@@ -351,6 +351,7 @@ public class RegAllocator {
             coalescedMoves.add(m);
             addWorkList(u);
         } else if (preColored.contains(v) || adjSet.contains(new Edge(u, v))) {
+            //u == module.getPhyRegisterHashMap().get("zero")
             constrainedMoves.add(m);
             addWorkList(u); addWorkList(v);
         }

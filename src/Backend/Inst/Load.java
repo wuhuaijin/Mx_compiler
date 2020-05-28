@@ -1,5 +1,6 @@
 package Backend.Inst;
 
+import Backend.BackModule;
 import Backend.BackendOpr;
 import Backend.RiscvVisitor;
 import IR.Operand.Pointer;
@@ -22,6 +23,7 @@ public class Load extends Inst {
                 return Collections.emptyList();
             else return Collections.singletonList(sr1);
         }
+        else if (src != null) return Collections.singletonList(BackModule.phyRegisterHashMap.get("sp"));
         else return Collections.emptyList();
     }
 

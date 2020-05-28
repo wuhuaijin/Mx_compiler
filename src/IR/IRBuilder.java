@@ -368,6 +368,7 @@ public class IRBuilder implements ASTVisitor {
         else {
             currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.mul, size, new Const(classSize), space));
         }
+//        currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.mul, size, new Const(4), space));
         Int32 spaceIncludeSize = new Int32("tot");
 
         currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, space, new Const(4), spaceIncludeSize));
@@ -392,7 +393,7 @@ public class IRBuilder implements ASTVisitor {
             Int32 index = new Int32("index");
             currentBB.addInstruction(new Move(currentBB, false, new Const(0), index));
             Pointer ptr = new Pointer("ptr");
-            currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, result, new Const(4), ptr));
+            currentBB.addInstruction(new Move(currentBB, false, result, ptr));
             currentBB.addLastInstruction(new Jump(currentBB, true, condBB));
 
             Int32 tmp = new Int32("tmp");

@@ -58,7 +58,7 @@ public class BackFunction {
     }
 
     public int getRealStackSize() {
-        return getStackSize() * 4 + (16 - getStackSize() * 4 % 16);
+        return getStackSize()  + (16 - getStackSize() % 16);
     }
 
     public void makeBBList(){

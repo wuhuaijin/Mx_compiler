@@ -1,5 +1,6 @@
 package Backend.Inst;
 
+import Backend.BackModule;
 import Backend.BackendOpr;
 import Backend.RiscvVisitor;
 import IR.Operand.Pointer;
@@ -27,6 +28,7 @@ public class Store extends Inst {
         List<Register> list= new ArrayList<>();
         list.add(src);
         if (rd != null && !(rd instanceof Pointer && ((Pointer) rd).isGlobal())) list.add(rd);
+        else if (ptr != null) list.add(BackModule.phyRegisterHashMap.get("sp"));
         return list;
     }
 

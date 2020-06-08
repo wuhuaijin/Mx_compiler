@@ -3,6 +3,7 @@ package IR.Instruction;
 import IR.BB;
 import IR.IRVisitor;
 import IR.Operand.Operand;
+import IR.Operand.VirtualRegister;
 
 import java.util.List;
 
@@ -113,5 +114,9 @@ abstract public class BaseInstruction {
     abstract public List<BB> getBB();
     abstract public BaseInstruction copySelf(BB bb, boolean ifTerminal, List<Operand> oprList, List<BB> bbList);
     abstract public void accept(IRVisitor visitor);
+    abstract public void replaceUseOpr(Operand _old, Operand _new);
+    abstract public void replaceDefOpr(Operand _new);
+    abstract public List<VirtualRegister> getUseOpr();
+    abstract public VirtualRegister getDefOpr();
 
 }

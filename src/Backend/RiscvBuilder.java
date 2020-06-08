@@ -26,6 +26,9 @@ import java.util.Map;
 
 public class RiscvBuilder implements IRVisitor {
 
+    final int MAX_IMM = (1 << 11) - 1;
+    final int MIN_IMM = -(1 << 11);
+
     public static String[] calleeSaveReg = {"s0","s1","s2","s3","s4","s5","s6","s7","s8","s9","s10","s11"};
 
     private BackBB curbb;
@@ -72,11 +75,11 @@ public class RiscvBuilder implements IRVisitor {
 
 
         for (var i : module.getCalleeSaveRegisterName()) {
-            var localReg = new VirtualRegister("backup." + i);
+            var localReg = new Int32("backup." + i);
             calleeMap.put(i, localReg);
             curbb.addInst(new Backend.Inst.Move(localReg, module.getPhyRegisterHashMap().get(i)));
         }
-        var ra = new VirtualRegister("backup.ra");
+        var ra = new Int32("backup.ra");
         curbb.addInst(new Backend.Inst.Move(ra, module.getPhyRegisterHashMap().get("ra")));
         calleeMap.put("ra", ra);
 
@@ -95,15 +98,20 @@ public class RiscvBuilder implements IRVisitor {
 
     }
 
+
+    public boolean checkBound(Const imm){
+        return MIN_IMM <= imm.getValue() && imm.getValue() <= MAX_IMM;
+    }
+
     public Register toReg(Operand opr) {
         if (opr instanceof ConstString) {
-            VirtualRegister str = new VirtualRegister("str");
+            VirtualRegister str = new Int32("str");
             curbb.addInst(new LA(str, (ConstString) opr));
             return str;
         }
         else if (opr instanceof Const) {
 //            if(((Const) opr).getValue() == 0) return module.getPhyRegisterHashMap().get("zero");
-            VirtualRegister imm = new VirtualRegister("imm");
+            VirtualRegister imm = new Int32("imm");
             curbb.addInst(new LI(imm, (Const) opr));
             return imm;
         }
@@ -205,20 +213,20 @@ public class RiscvBuilder implements IRVisitor {
                     rs1 = rs2;
                     rs2 = tmp;
                 }
-                if (rs2 instanceof Const) {
+                if (rs2 instanceof Const && checkBound((Const) rs2)) {
 //                    System.out.println(rs1);
                     curbb.addInst(new ImmAction(toReg(rs1), rd, op_I, (Const) rs2));
                 } else {
-                    curbb.addInst(new RegAction(toReg(rs1), (Register) rs2, rd, op_R));
+                    curbb.addInst(new RegAction(toReg(rs1), toReg(rs2), rd, op_R));
                 }
                 break;
             }
             case sub: {
-                if (rs2 instanceof Const) {
+                if (rs2 instanceof Const && checkBound((Const) rs2)) {
                     int rs2Imm = -((Const) rs2).getValue();
                     curbb.addInst(new ImmAction(toReg(rs1), rd, op_I, new Const(rs2Imm)));
                 } else {
-                    curbb.addInst(new RegAction(toReg(rs1), (Register) rs2, rd, op_R));
+                    curbb.addInst(new RegAction(toReg(rs1), toReg(rs2), rd, op_R));
                 }
                 break;
             }
@@ -383,6 +391,8 @@ public class RiscvBuilder implements IRVisitor {
             curbb.addInst(new Backend.Inst.Store((Register) inst.getPointer(), toReg(inst.getVal()), null, 4));
         }
     }
+
+
 
     @Override
     public void visit(PhiNode inst) { }

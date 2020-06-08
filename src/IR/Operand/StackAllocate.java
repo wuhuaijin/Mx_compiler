@@ -34,5 +34,9 @@ public class  StackAllocate extends BackendOpr {
         this.bt = bt;
     }
 
-
+    public int getOffset() {
+        if (bt)
+            return offset + function.getRealStackSize();
+        else return offset;
+    }
 }

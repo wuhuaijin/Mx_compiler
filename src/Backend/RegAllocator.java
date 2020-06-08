@@ -6,7 +6,6 @@ import IR.Operand.Register;
 import IR.Operand.StackAllocate;
 import IR.Operand.VirtualRegister;
 
-import javax.print.DocFlavor;
 import java.util.*;
 
 public class RegAllocator {
@@ -72,6 +71,11 @@ public class RegAllocator {
             init();
             new LiveAnalysis(func, module).run();
             build(func);
+//            System.out.println(initial.size());
+            if (initial.size() > 3500) {
+                rewriteProgram2(func);
+                break;
+            }
             makeWorkList();
 //            int number = 0;
             while (!simplifyWorkList.isEmpty() || !workListMoves.isEmpty() || !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()){
@@ -498,7 +502,61 @@ public class RegAllocator {
                 }
             }
         }
+    }
 
+    public void rewriteProgram2(BackFunction function) {
+
+        for (var i : initial) {
+//            i.spillAddr = new StackAllocate(function, true, function.stackAllocFromBot(4));
+            i.spillAddr = new StackAllocate(function, false);
+        }
+        for (var bb : function.getBbList()) {
+            Inst nextins;
+            for (var inst = bb.getHead(); inst != null; inst = nextins) {
+                nextins = inst.getNext();
+                Set<String> colorSet = new HashSet<>();
+                colorSet.add("t0");
+                colorSet.add("t1");
+                colorSet.add("t2");
+                colorSet.add("t3");
+                for (var reg : inst.getUseReg()) {
+
+                    if (reg.spillAddr != null) {
+
+                        var a = new Int32("spill_" + reg.getId());
+                        inst.pushFront(new Load(reg.spillAddr, a, 4));
+                        inst.replaceUseReg(reg, a);
+                        a.color = colorSet.iterator().next();
+                        colorSet.remove(a.color);
+                    }
+
+                }
+
+                if (inst.getDefReg() != null && inst.getDefReg().spillAddr != null) {
+                    var defReg = inst.getDefReg();
+                    var tmp = new Int32("spill_" + inst.getDefReg().getId());
+                    inst.replaceDefReg(tmp);
+                    inst.pushBack(new Store(defReg.spillAddr, tmp, null, 4));
+                    tmp.color = colorSet.iterator().next();
+                    colorSet.remove(tmp.color);
+                }
+            }
+        }
+
+
+        for (var bb : function.getBbList()) {
+            for (var inst = bb.getHead(); inst != null; inst = inst.getNext()) {
+                for (var reg : inst.getUseReg()) {
+                    if (!(reg instanceof PhyRegister) && reg.color != null) {
+                        inst.replaceUseReg(reg, module.getPhyRegisterHashMap().get(reg.color));
+                    }
+                }
+                var defreg = inst.getDefReg();
+                if (defreg != null && !(defreg instanceof PhyRegister) && defreg.color != null) {
+                    inst.replaceDefReg(module.getPhyRegisterHashMap().get(defreg.color));
+                }
+            }
+        }
     }
 
     public void allocate(BackFunction function) {

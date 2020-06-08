@@ -46,4 +46,24 @@ public class Return extends BaseInstruction {
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        if (retVar == _old) retVar = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        assert false;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        return retVar instanceof VirtualRegister ? Collections.singletonList((VirtualRegister) retVar) : Collections.emptyList();
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return null;
+    }
 }

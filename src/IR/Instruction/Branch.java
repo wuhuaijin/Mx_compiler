@@ -52,11 +52,29 @@ public class Branch extends BaseInstruction {
         visitor.visit(this);
     }
 
-//    @Override
-//    public String toString() {
-//        if (cond != null)
-//            return "br i1 " + cond.toString() + ", label " + b1.getLable() + ", label " + b2.getLable();
-//        else
-//            return "br label " + b1.getLable();
-//    }
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        if (cond == _old) cond = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        assert false;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        return cond instanceof VirtualRegister ? Collections.singletonList((VirtualRegister)cond) : Collections.emptyList();
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return null;
+    }
+
+
+    public void replaceTargetBB(BB _old, BB _new){
+        if (b1 == _old) b1 = _new;
+        if (b2 == _old) b2 = _new;
+    }
 }

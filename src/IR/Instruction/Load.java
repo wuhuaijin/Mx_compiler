@@ -48,4 +48,24 @@ public class Load extends BaseInstruction {
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        if (pointer == _old) pointer = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        reg = _new;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        return pointer instanceof VirtualRegister ? Collections.singletonList((VirtualRegister) pointer) : Collections.emptyList();
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return reg instanceof VirtualRegister ? (VirtualRegister) reg : null;
+    }
 }

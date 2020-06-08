@@ -160,6 +160,9 @@ public class FuncInline {
         }
 
 
+        if (exitBB.getLable().toString().equals("b_53")) {
+            int a = 0;
+        }
         if (b1.getTail() != null) b1.getTail().setIfTerminal(false);
         if (exitBB.getTail() != null) exitBB.getTail().setIfTerminal(false);
         b1.addInstruction(new Jump(b1, true, inBB));

@@ -40,4 +40,28 @@ public class Jump extends BaseInstruction{
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        assert false;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        assert false;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return null;
+    }
+
+    public void replaceTargetBB(BB _new){
+        toBB = _new;
+    }
 }

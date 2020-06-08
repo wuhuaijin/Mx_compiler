@@ -474,28 +474,34 @@ public class IRBuilder implements ASTVisitor {
         Operand val = node.getExpr().getResultOpr();
         switch (op) {
             case addadd: {
+
                 if (val instanceof Pointer) {
                     Int32 tmp = new Int32("tmp");
                     currentBB.addInstruction(new Load(currentBB, false, tmp, val));
 
                     currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, new Const(1), tmp, tmp));
                     currentBB.addInstruction(new Store(currentBB, false, tmp, val));
+                    node.setResultOpr(tmp);
                 } else {
                     currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.add, new Const(1), val, val));
+                    node.setResultOpr(val);
                 }
-                node.setResultOpr(val);
+
                 break;
             }
             case subsub: {
+
                 if (val instanceof Pointer) {
                     Int32 tmp = new Int32("tmp");
                     currentBB.addInstruction(new Load(currentBB, false, tmp, val));
                     currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.sub, tmp, new Const(1), tmp));
                     currentBB.addInstruction(new Store(currentBB, false, tmp, val));
+                    node.setResultOpr(tmp);
                 } else {
                     currentBB.addInstruction(new BinaryOp(currentBB, false, BinaryOp.Op.sub, val, new Const(1), val));
+                    node.setResultOpr(val);
                 }
-                node.setResultOpr(val);
+
                 break;
             }
             case not: {

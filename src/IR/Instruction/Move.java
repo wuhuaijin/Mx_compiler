@@ -3,6 +3,7 @@ package IR.Instruction;
 import IR.BB;
 import IR.IRVisitor;
 import IR.Operand.Operand;
+import IR.Operand.VirtualRegister;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,5 +45,25 @@ public class Move extends BaseInstruction{
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        if (src == _old) src = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        dest = _new;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        return src instanceof VirtualRegister ? Collections.singletonList((VirtualRegister) src) : Collections.emptyList();
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return dest instanceof VirtualRegister ? (VirtualRegister) dest : null;
     }
 }

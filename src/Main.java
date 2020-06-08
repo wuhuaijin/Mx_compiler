@@ -9,10 +9,7 @@ import Frontend.ASTBuilder;
 import Frontend.SemaChecker;
 import Helper.SyntaxException;
 import IR.*;
-import Optim.FuncInline;
-import Optim.GlobalVarResolve;
-import Optim.Pass;
-import Optim.PeepholeOptim;
+import Optim.*;
 import Parser.*;
 
 import Parser.MxLexer;
@@ -48,30 +45,49 @@ public class Main {
             SemaChecker checker = new SemaChecker();
             checker.visit((ProgNode) astRoot);
 
-            FuncVisitor funcVisitor = new FuncVisitor(checker.getTypeTable());
-            funcVisitor.visit(((ProgNode) astRoot));
-            IRBuilder ir = new IRBuilder(checker.getGlobalScope());
-            SystemFunc.addBuiltinFunction(ir.getModule(), checker.getGlobalScope());
+            if (args[0].equals("codegen")) {
+                FuncVisitor funcVisitor = new FuncVisitor(checker.getTypeTable());
+                funcVisitor.visit(((ProgNode) astRoot));
+                IRBuilder ir = new IRBuilder(checker.getGlobalScope());
+                SystemFunc.addBuiltinFunction(ir.getModule(), checker.getGlobalScope());
 
-            ir.visit(((ProgNode) astRoot));
-            Module module = ir.getModule();
-            FuncInline funcInline = new FuncInline(module);
-//            funcInline.run();
-            GlobalVarResolve globalVarResolve = new GlobalVarResolve(module);
-            globalVarResolve.run();
-            new Pass(ir.getModule()).run();
+                ir.visit(((ProgNode) astRoot));
+                Module module = ir.getModule();
+                FuncInline funcInline = new FuncInline(module);
+                funcInline.run();
+                GlobalVarResolve globalVarResolve = new GlobalVarResolve(module);
+                globalVarResolve.run();
 
-            IRPrinter irPrinter = new IRPrinter(new PrintStream("ir.txt"));
-            irPrinter.visit(ir.getModule());
+                new CFGSimplify(ir.getModule()).run();
+                new DTree(ir.getModule()).run();
+                new SSAConstructer(ir.getModule()).run();
 
-//            IRInterpreter.main("ir.txt", System.out, new FileInputStream("test.in"), false);
+                for (boolean changed = true; changed; ) {
+                    changed = false;
+                    changed |= new SCCP(ir.getModule()).run();
+                    changed |= new DCE(ir.getModule()).run();
+//                    changed |= new CFGSimplify(ir.getModule()).run();
+                }
 
-            RiscvBuilder riscvBuilder = new RiscvBuilder();
-            riscvBuilder.visit(ir.getModule());
-            new RegAllocator(riscvBuilder.getModule()).run();
-            new FinalProcess(riscvBuilder.getModule()).run();
-            new PeepholeOptim(riscvBuilder.getModule()).run();
-            new RiscvPrinter(riscvBuilder.getModule()).visit(new PrintStream("test.s"));
+
+
+                new SomeTrick(ir.getModule()).run();
+                new SSADestructor(ir.getModule()).run();
+                new CFGSimplify(ir.getModule()).run();
+                IRPrinter irPrinter = new IRPrinter(new PrintStream("ir.txt"));
+                irPrinter.visit(ir.getModule());
+
+//                IRInterpreter.main("ir.txt", System.out, new FileInputStream("test.in"), false);
+
+                RiscvBuilder riscvBuilder = new RiscvBuilder();
+                riscvBuilder.visit(ir.getModule());
+                new RegAllocator(riscvBuilder.getModule()).run();
+                new FinalProcess(riscvBuilder.getModule()).run();
+                new PeepholeOptim(riscvBuilder.getModule()).run();
+                new RiscvPrinter(riscvBuilder.getModule()).visit(new PrintStream("test.s"));
+            }
+
+
 
         }
         catch (SyntaxException e) {

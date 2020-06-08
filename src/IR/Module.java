@@ -10,6 +10,7 @@ public class Module {
     private ArrayList<Function> funcs = new ArrayList<>();
     private ArrayList<ConstString> constStrings = new ArrayList<>();
     private ArrayList<Register> globalVars = new ArrayList<>();
+    private boolean ssa = false;
 
 //    private Map<String, Function> funcs = new HashMap<>();
 
@@ -36,7 +37,15 @@ public class Module {
         return funcs;
     }
 
-//    public Function getFunc(String funcName) throws SyntaxException {
+    public boolean isSsa() {
+        return ssa;
+    }
+
+    public void setSsa(boolean ssa) {
+        this.ssa = ssa;
+    }
+
+    //    public Function getFunc(String funcName) throws SyntaxException {
 //        if (hasFunc(funcName)) return funcs.get(funcName);
 //        else throw new SyntaxException(new Location(0, 0), "no function find!");
 //    }

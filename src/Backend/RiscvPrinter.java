@@ -1,10 +1,7 @@
 package Backend;
 
 import Backend.Inst.*;
-import IR.Operand.Const;
-import IR.Operand.ConstString;
-import IR.Operand.Register;
-import IR.Operand.VirtualRegister;
+import IR.Operand.*;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -123,7 +120,12 @@ public class RiscvPrinter implements RiscvVisitor {
     @Override
     public void visit(Load inst) {
         if (inst.getSrc() != null) {
-            print3("lw\t" + inst.getRd().getId() + ", " + inst.getSrc().toString());
+            if (((StackAllocate) inst.getSrc()).getOffset() > 2047) {
+                print3("li\t" + "t5, " + ((StackAllocate) inst.getSrc()).getOffset());
+                print3("add\t" + "t5, sp, t5");
+                print3("lw\t" + inst.getRd().getId() + ", 0(t5)");
+            }
+            else print3("lw\t" + inst.getRd().getId() + ", " + inst.getSrc().toString());
         }
         else if (inst.getSr1() != null) {
             if (inst.getSr1() instanceof VirtualRegister) {
@@ -155,7 +157,12 @@ public class RiscvPrinter implements RiscvVisitor {
                 print3("sw\t" + inst.getSrc().getId() + ", 0(" + inst.getRd().getId() + ")");
             }
             else if (inst.getPtr() != null) {
-                print3("sw\t" + inst.getSrc().getId() + ", " + inst.getPtr().toString());
+                if (((StackAllocate) inst.getPtr()).getOffset() > 2047) {
+                    print3("li\t" + "t5, " + ((StackAllocate) inst.getPtr()).getOffset());
+                    print3("add\t" + "t5, sp, t5");
+                    print3("sw\t" + inst.getSrc().getId() + ", 0(t5)");
+                }
+                else print3("sw\t" + inst.getSrc().getId() + ", " + inst.getPtr().toString());
             }
         }
     }

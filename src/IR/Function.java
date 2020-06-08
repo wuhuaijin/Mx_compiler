@@ -14,14 +14,16 @@ public class Function {
     private boolean isSystem;
     private boolean isextend;
     private List<BB> preOrderBBList;
+    private List<BB> postOrderBBList;
     private List<BB> totalBBlist;
-
+    private Set<VirtualRegister> globals;
 
 
     public Function(String funcName) {
         this.funcName = funcName;
         this.paras = new ArrayList<>();
         this.totalBBlist = new ArrayList<>();
+        this.globals = new LinkedHashSet<>();
     }
 
     public String getFuncName() {
@@ -100,47 +102,90 @@ public class Function {
         this.isextend = isextend;
     }
 
-    public void setPreOrderBBList() {
-        this.preOrderBBList = new ArrayList<>();
-        Set<BB> visited = new HashSet<>();
-        dfs(inBB, visited);
+    public Set<VirtualRegister> getGlobals() {
+        return globals;
     }
 
-    public void dfs(BB bb, Set<BB> visited) {
-//        if (bb == null) return;
-        if (visited.contains(bb)) return;
+
+    public void setPreOrderBBList() {
+        this.preOrderBBList = new ArrayList<>();
+        this.postOrderBBList = new ArrayList<>();
+        Set<BB> visited = new HashSet<>();
+        dfs(inBB, null, visited);
+    }
+
+    public void dfs(BB bb, BB parbb, Set<BB> visited) {
+
+        if (bb == null) return;//todo : if need delete ?
+        if (visited.contains(bb)) {
+            if (bb.getLable().toString().equals("b_55")) {
+                int a =0;
+            }
+            if (!bb.getPredecessors().contains(parbb))
+                bb.getPredecessors().add(parbb);
+            return;
+        }
+        if (bb.getLable().toString().equals("b_55")) {
+            int a =0;
+        }
+        if (parbb != null) bb.setPredecessors(new ArrayList<>(Collections.singleton(parbb)));
+        else bb.setPredecessors(new ArrayList<>());
+        bb.setFather(parbb);
         preOrderBBList.add(bb);
         visited.add(bb);
         bb.findSuccessorsAndPre();
         for (var i : bb.getSuccessors()) {
-            dfs(i, visited);
+            dfs(i, bb, visited);
         }
+        postOrderBBList.add(bb);
     }
 
     public List<BB> getPreOrderBBList() {
         return preOrderBBList;
     }
-    //    public void addBB(BB bb) {
-//        this.bbList.add(bb);
-//    }
-//
-//    @Override
-//    public String toString() {
-//        if (extend) return "";
-//        StringBuilder parasToString = new StringBuilder();
-//        for (var i : this.paras) {
-//            parasToString.append(i.toString());
-//            parasToString.append(", ");
-//        }
-//        StringBuilder bbToString = new StringBuilder();
-//        for (var i : this.bbList) {
-//            bbToString.append(i.toString());
-//        }
-//        return "define " + "@" + getFuncName() + "(" + parasToString.toString() + ") {\n" + bbToString.toString() + "}\n\n";
-//    }
-//
-//
-//    public void allocOperand(Operand operand) {
-//        alloc.setOperand(operand);
-//    }
+
+    public List<BB> getPostOrderBBList() {
+        return postOrderBBList;
+    }
+
+
+    public List<Object> makeReverseCopy() {
+        Map<BB, BB> bbMap = new LinkedHashMap<>();
+        Map<BB, BB> rebbMap = new LinkedHashMap<>();
+        for (var bb : preOrderBBList) {
+            bbMap.put(bb, new BB(Lable.getLable(), "reverse"));
+            rebbMap.put(bbMap.get(bb), bb);
+        }
+        for (var bb : preOrderBBList) {
+            var newBB = bbMap.get(bb);
+            bb.getPredecessors().forEach(i->newBB.getSuccessors().add(bbMap.get(i)));
+            bb.getSuccessors().forEach(i->newBB.getPredecessors().add(bbMap.get(i)));
+        }
+
+        var reverseFunc = new Function("reverse" + getFuncName());
+        reverseFunc.setOutBB(bbMap.get(inBB));
+        reverseFunc.setInBB(bbMap.get(outBB));
+        reverseFunc.reverseOrderBBList();
+
+        return Arrays.asList(bbMap, rebbMap, reverseFunc);
+    }
+
+    public void reverseOrderBBList() {
+        preOrderBBList = new ArrayList<>();
+        Set<BB> visited = new HashSet<>();
+        reverseDfs(inBB, null, visited);
+    }
+
+    public void reverseDfs(BB bb, BB parbb, Set<BB> visited) {
+        if (bb == null) return;
+        if (visited.contains(bb)) return;
+        bb.setFather(parbb);
+        preOrderBBList.add(bb);
+        visited.add(bb);
+        for (var i : bb.getSuccessors()) {
+            reverseDfs(i, bb, visited);
+        }
+    }
+
+
 }

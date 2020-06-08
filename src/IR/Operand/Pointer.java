@@ -23,4 +23,9 @@ public class Pointer extends VirtualRegister {
         visitor.visit(this);
     }
 
+    @Override
+    public VirtualRegister getSSAWithId(int index) {
+        return new Pointer(this.getId() + "." + index);
+    }
+
 }

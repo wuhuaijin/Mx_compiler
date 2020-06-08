@@ -76,18 +76,6 @@ public class BackBB {
     public String getId() {
         return id;
     }
-
-
-    public int dfn;
-    public List<BackBB> bucket = new ArrayList<>();
-    public BackBB ancestor;
-    public BackBB best;
-
-    public BackBB semiDom;
-    public BackBB sameDom;
-    public BackBB iDom; 		// i.e. parent in dominator tree
-    public List<BackBB> iDomChildren = new ArrayList<>();
-    
     
     public void addInst(Inst inst) {
         inst.setBb(this);

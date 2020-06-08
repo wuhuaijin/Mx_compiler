@@ -8,4 +8,10 @@ public class Int32 extends VirtualRegister {
         super(id);
     }
 
+
+    @Override
+    public VirtualRegister getSSAWithId(int index) {
+        return new Int32(this.getId() + "." + index);
+    }
+
 }

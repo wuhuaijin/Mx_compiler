@@ -74,4 +74,33 @@ public class Call extends BaseInstruction {
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        for (var i = 0; i < paras.size(); ++i) {
+            if (paras.get(i) == _old)
+                paras.set(i, _new);
+        }
+        if (obj == _old) obj = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        result = _new;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        List<VirtualRegister> registerList = new ArrayList<>();
+        if(obj instanceof VirtualRegister) registerList.add((VirtualRegister)obj);
+        paras.forEach(opr -> {
+            if(opr instanceof VirtualRegister) registerList.add((VirtualRegister) opr);
+        });
+        return registerList;
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return result instanceof VirtualRegister ? (VirtualRegister) result : null;
+    }
 }

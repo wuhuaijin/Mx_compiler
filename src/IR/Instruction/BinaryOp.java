@@ -5,6 +5,7 @@ import IR.IRVisitor;
 import IR.Operand.*;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -170,5 +171,29 @@ public class BinaryOp extends BaseInstruction{
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        if (ls == _old) ls = _new;
+        if (rs == _old) rs = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        result = _new;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        List<VirtualRegister> registerList = new ArrayList<>();
+        if(ls instanceof VirtualRegister) registerList.add((VirtualRegister)ls);
+        if(rs instanceof VirtualRegister) registerList.add((VirtualRegister)rs);
+        return registerList;
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return result instanceof VirtualRegister ? (VirtualRegister) result : null;
     }
 }

@@ -1,11 +1,9 @@
 package IR;
 
-import IR.Instruction.BaseInstruction;
-import IR.Instruction.Branch;
-import IR.Instruction.Jump;
-import IR.Instruction.Return;
+import Backend.BackBB;
+import IR.Instruction.*;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class BB {
 
@@ -20,6 +18,31 @@ public class BB {
 
     private ArrayList<BB> successors;
     private ArrayList<BB> predecessors;
+
+    private BB father;
+
+    public int reversePostOrderIndex;
+    public List<BB> bucket = new ArrayList<>();
+    public BB ancestor;
+    public BB best;
+
+    public BB semiDom;
+    public BB sameDom;
+    public BB iDom; 		// i.e. parent in dominator tree
+    public List<BB> iDomChildren = new ArrayList<>();
+    public Set<BB> domFrontier = new LinkedHashSet<>();
+
+    public BB postIdom;
+    public Set<BB> postDomFrontier = new LinkedHashSet<>();
+
+    public void clear(){
+        ancestor = null;
+        semiDom = null;
+        sameDom = null;
+        iDom = null;
+        bucket.clear();
+    }
+
 
     public BB(Lable lable, String type) {
         this.lable = lable;
@@ -69,6 +92,22 @@ public class BB {
 
     public BaseInstruction getTail() {
         return tail;
+    }
+
+    public void setSuccessors(ArrayList<BB> successors) {
+        this.successors = successors;
+    }
+
+    public void setPredecessors(ArrayList<BB> predecessors) {
+        this.predecessors = predecessors;
+    }
+
+    public BB getFather() {
+        return father;
+    }
+
+    public void setFather(BB father) {
+        this.father = father;
     }
 
     public ArrayList<BB> getSuccessors() {
@@ -126,17 +165,35 @@ public class BB {
         tail.setIfTerminal(true);
     }
 
+//    public void makeSucBBList(){
+//        assert tailIns != null;
+//        sucBBList = new ArrayList<>();
+//        if(tailIns instanceof Branch) {
+//            if(((Branch) tailIns).getThenBB() != ((Branch) tailIns).getElseBB())
+//                sucBBList.addAll(Arrays.asList(((Branch)tailIns).getThenBB(), ((Branch) tailIns).getElseBB()));
+//            else
+//                sucBBList.add(((Branch) tailIns).getThenBB());
+//        }
+//        else if(tailIns instanceof Jump) sucBBList.add(((Jump) tailIns).getBB());
+//        else if(!(tailIns instanceof Return)) throw new FuckingException("basic block terminated by something strange");
+//    }
+
     public void findSuccessorsAndPre() {
+        if (lable.toString().equals("b_53")) {
+            int a = 0;
+        }
+        successors = new ArrayList<>();
         if (getTail() instanceof Return) return;
         if (getTail() instanceof Jump) {
+
             successors.add(((Jump) getTail()).getToBB());
-            ((Jump) getTail()).getToBB().appendPredecessors(this);
+//            ((Jump) getTail()).getToBB().appendPredecessors(this);
         }
         else if (getTail() instanceof Branch) {
             successors.add(((Branch) getTail()).getB1());
-            ((Branch) getTail()).getB1().appendPredecessors(this);
+//            ((Branch) getTail()).getB1().appendPredecessors(this);
             successors.add(((Branch) getTail()).getB2());
-            ((Branch) getTail()).getB2().appendPredecessors(this);
+//            ((Branch) getTail()).getB2().appendPredecessors(this);
         }
     }
 
@@ -150,6 +207,32 @@ public class BB {
     public void deleteSelf() {
         successors.forEach(i->i.getPredecessors().remove(this));
         predecessors.forEach(i->i.getSuccessors().remove(this));
+    }
+
+    public void merge(BB mergebb) {
+
+        for(var sucBB : mergebb.getSuccessors()){
+            for(var ins = sucBB.getHead(); ins instanceof PhiNode; ins = ins.getNext()){
+                ((PhiNode) ins).replacePath(mergebb, this);
+            }
+        }
+        for (var ins = mergebb.getHead(); ins != null; ins = ins.getNext()) {
+            ins.setBasicBlock(this);
+        }
+        for (var sucbb : mergebb.getSuccessors()) {
+            sucbb.getPredecessors().add(this);
+            sucbb.getPredecessors().remove(mergebb);
+        }
+        if (head == tail) {
+            head = mergebb.getHead();
+        }
+        else {
+            tail.delete();
+            tail.setNext(mergebb.getHead());
+            mergebb.getHead().setPrev(tail);
+        }
+        setTail(mergebb.getTail());
+        successors = mergebb.getSuccessors();
     }
 
 

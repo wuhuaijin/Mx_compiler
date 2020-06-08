@@ -71,5 +71,25 @@ public class UnaryOp extends BaseInstruction {
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public void replaceUseOpr(Operand _old, Operand _new) {
+        if (rs == _old) rs = _new;
+    }
+
+    @Override
+    public void replaceDefOpr(Operand _new) {
+        result = _new;
+    }
+
+    @Override
+    public List<VirtualRegister> getUseOpr() {
+        return rs instanceof VirtualRegister ? Collections.singletonList((VirtualRegister) rs) : Collections.emptyList();
+    }
+
+    @Override
+    public VirtualRegister getDefOpr() {
+        return result instanceof VirtualRegister ? (VirtualRegister) result : null;
+    }
 }
 

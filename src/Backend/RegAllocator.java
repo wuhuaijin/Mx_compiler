@@ -191,7 +191,7 @@ public class RegAllocator {
         }
 //        int count = 0;
         for (var bb : function.getBbList()) {
-            Set<Register> live = new HashSet<>(bb.getLiveOut());
+            Set<Register> live = new LinkedHashSet<>(bb.getLiveOut());
             for (var inst = bb.getTail(); inst != null; inst = inst.getPrev()) {
                 if (inst instanceof Move) {
                     live.removeAll(inst.getUseReg());
@@ -231,8 +231,8 @@ public class RegAllocator {
     }
 
     private Set<Move> nodeMoves(Register reg) {
-        Set<Move> ret = new HashSet<>(reg.moveSet);
-        Set<Move> tmp = new HashSet<>(activeMoves);
+        Set<Move> ret = new LinkedHashSet<>(reg.moveSet);
+        Set<Move> tmp = new LinkedHashSet<>(activeMoves);
         tmp.addAll(workListMoves);
         ret.retainAll(tmp);
         return ret;
@@ -252,7 +252,7 @@ public class RegAllocator {
     }
 
     private Set<Register> adjacent(Register reg) {
-        Set<Register> ret = new HashSet<>(reg.adjSet);
+        Set<Register> ret = new LinkedHashSet<>(reg.adjSet);
         ret.removeAll(selectStack);
         ret.removeAll(coalescedNodes);
         return ret;
@@ -437,7 +437,7 @@ public class RegAllocator {
         int b = 0;
         while (!selectStack.isEmpty()) {
             var reg = selectStack.pop();
-            Set<String> okColors = new HashSet<>(Arrays.asList(module.getAllocatableRegName()));
+            Set<String> okColors = new LinkedHashSet<>(Arrays.asList(module.getAllocatableRegName()));
             for (var i : reg.adjSet) {
                 var ii = getAlias(i);
                 if (coloredNodes.contains(ii) || preColored.contains(ii)) {
@@ -514,7 +514,7 @@ public class RegAllocator {
             Inst nextins;
             for (var inst = bb.getHead(); inst != null; inst = nextins) {
                 nextins = inst.getNext();
-                Set<String> colorSet = new HashSet<>();
+                Set<String> colorSet = new LinkedHashSet<>();
                 colorSet.add("t0");
                 colorSet.add("t1");
                 colorSet.add("t2");

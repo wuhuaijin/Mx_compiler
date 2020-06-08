@@ -19,10 +19,7 @@ import IR.IrType.PointerType;
 import IR.Module;
 import IR.Operand.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RiscvBuilder implements IRVisitor {
 
@@ -35,9 +32,9 @@ public class RiscvBuilder implements IRVisitor {
     private BackFunction curFunc;
     private BackModule module = new BackModule();
 
-    private Map<BB,BackBB> bbTobb = new HashMap<>();
-    private Map<Function, BackFunction> funcTofunc = new HashMap<>();
-    private Map<String, VirtualRegister> calleeMap = new HashMap<>();
+    private Map<BB,BackBB> bbTobb = new LinkedHashMap<>();
+    private Map<Function, BackFunction> funcTofunc = new LinkedHashMap<>();
+    private Map<String, VirtualRegister> calleeMap = new LinkedHashMap<>();
 
     public static BackFunction mallocFunction = new BackFunction("malloc", true);
 

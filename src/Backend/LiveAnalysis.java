@@ -49,9 +49,9 @@ public class LiveAnalysis {
             changed = false;
             for (int i = function.getBbList().size() - 1; i >= 0; --i) {
                 BackBB curbb = function.getBbList().get(i);
-                Set<Register> newOut = new HashSet<>();
-                Set<Register> newIn = new HashSet<>(curbb.getUse());
-                Set<Register> tmpSet = new HashSet<>(curbb.getLiveOut());
+                Set<Register> newOut = new LinkedHashSet<>();
+                Set<Register> newIn = new LinkedHashSet<>(curbb.getUse());
+                Set<Register> tmpSet = new LinkedHashSet<>(curbb.getLiveOut());
                 tmpSet.removeAll(curbb.getDef());
                 newIn.addAll(tmpSet);
                 curbb.getSuccessors().forEach(j->newOut.addAll(j.getLiveIn()));

@@ -11,10 +11,10 @@ import java.util.logging.LoggingPermission;
 public class GlobalVarResolve {
     Module module;
     private List<Function> funcList = new ArrayList<>();
-    private Map<Function, Set<Operand>> globalVarInFunc = new HashMap<>();
-    private Map<Function, Set<Function>> calleeList = new HashMap<>();
-    private Map<Function, Set<Operand>> globalVarRecurInFun = new HashMap<>();
-    private Map<Function, Map<Operand, Operand>> tmpVarMapInFunc = new HashMap<>();
+    private Map<Function, Set<Operand>> globalVarInFunc = new LinkedHashMap<>();
+    private Map<Function, Set<Function>> calleeList = new LinkedHashMap<>();
+    private Map<Function, Set<Operand>> globalVarRecurInFun = new LinkedHashMap<>();
+    private Map<Function, Map<Operand, Operand>> tmpVarMapInFunc = new LinkedHashMap<>();
 
     public GlobalVarResolve(Module module) {
         this.module = module;
@@ -32,8 +32,8 @@ public class GlobalVarResolve {
     public void copyTmpVar() {
         for (var func  : funcList) {
             func.setPreOrderBBList();
-            Map<Operand, Operand> globalVarTmpMap = new HashMap<>();
-            Map<Operand, Operand> replaceMap = new HashMap<>();
+            Map<Operand, Operand> globalVarTmpMap = new LinkedHashMap<>();
+            Map<Operand, Operand> replaceMap = new LinkedHashMap<>();
             tmpVarMapInFunc.put(func, globalVarTmpMap);
             for (var bb : func.getPreOrderBBList()) {
                 for (var ins = bb.getHead(); ins != null; ins = ins.getNext()) {
@@ -61,8 +61,8 @@ public class GlobalVarResolve {
     public void scanningFunc() {
 
         for (var func : funcList) {
-            Set<Operand> globalVars = new HashSet<>();
-            Set<Function> calleeFunction = new HashSet<>();
+            Set<Operand> globalVars = new LinkedHashSet<>();
+            Set<Function> calleeFunction = new LinkedHashSet<>();
             globalVarInFunc.put(func, globalVars);
             for (var bb : func.getPreOrderBBList()) {
                 for (var ins = bb.getHead(); ins != null; ins = ins.getNext()) {
@@ -78,7 +78,7 @@ public class GlobalVarResolve {
                 }
             }
             calleeList.put(func, calleeFunction);
-            globalVarRecurInFun.put(func, new HashSet<>(globalVars));
+            globalVarRecurInFun.put(func, new LinkedHashSet<>(globalVars));
         }
         boolean changed = true;
         while (changed) {

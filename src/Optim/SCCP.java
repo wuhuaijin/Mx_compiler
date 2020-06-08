@@ -34,10 +34,10 @@ public class SCCP extends Pass implements IRVisitor {
         }
     }
 
-    Map<Operand, OperandStatus> operandStatusMap = new HashMap<>();
+    Map<Operand, OperandStatus> operandStatusMap = new LinkedHashMap<>();
     Queue<BB> CFGList = new LinkedList<>();
     Queue<Register> workList = new LinkedList<>();
-    Set<BB> unExecutedBlock = new HashSet<>();
+    Set<BB> unExecutedBlock = new LinkedHashSet<>();
 
 
     public SCCP(Module module) {
@@ -173,7 +173,7 @@ public class SCCP extends Pass implements IRVisitor {
                 Operand dest = ((Move) inst).getDest();
                 if (src instanceof Const) {
                     boolean hasPhi = false;
-                    Set<BaseInstruction> oldUsed = new HashSet<>(used.get(dest));
+                    Set<BaseInstruction> oldUsed = new LinkedHashSet<>(used.get(dest));
                     for (var i : oldUsed) {
                         if (i != inst) {
                             if (!(i instanceof PhiNode)) {
@@ -190,7 +190,7 @@ public class SCCP extends Pass implements IRVisitor {
                 }
                 if (src instanceof VirtualRegister) {
                     boolean hasPhi = false;
-                    Set<BaseInstruction> oldUsed = new HashSet<>(used.get(dest));
+                    Set<BaseInstruction> oldUsed = new LinkedHashSet<>(used.get(dest));
                     Set<BaseInstruction> newUsed = used.get(src);
                     for (var i : oldUsed) {
                         if (i != inst) {

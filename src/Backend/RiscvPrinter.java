@@ -4,17 +4,14 @@ import Backend.Inst.*;
 import IR.Operand.*;
 
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class RiscvPrinter implements RiscvVisitor {
 
     PrintStream output;
     private BackModule module;
 
-    Map<BackBB, String> bbNameMap = new HashMap<>();
+    Map<BackBB, String> bbNameMap = new LinkedHashMap<>();
     int cnt = 0;
     int ConstStrcnt = 0;
 
@@ -50,10 +47,10 @@ public class RiscvPrinter implements RiscvVisitor {
     public String getbbName(BackBB bb) {
         if (!bbNameMap.containsKey(bb)) {
             if (bb.getId() == null) {
-                bbNameMap.put(bb, "b" + cnt++);
+                bbNameMap.put(bb, "b" + "." + cnt++);
             }
             else {
-                bbNameMap.put(bb, "b" + bb.getId() + cnt++);
+                bbNameMap.put(bb, "b" + bb.getId() +"_" + cnt++ + "_");
             }
         }
         return bbNameMap.get(bb);

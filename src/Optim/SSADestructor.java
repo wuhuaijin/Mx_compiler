@@ -27,7 +27,7 @@ public class SSADestructor extends Pass {
         }
     }
 
-    private Map<BB, List<ParallelCopy>> parallelCopy = new HashMap<>();
+    private Map<BB, List<ParallelCopy>> parallelCopy = new LinkedHashMap<>();
 
 
     public SSADestructor(Module module) {
@@ -54,7 +54,7 @@ public class SSADestructor extends Pass {
         }
         for (var bb : function.getPreOrderBBList()) {
             List<BB> predecessors = new LinkedList<>(bb.getPredecessors());
-            Map<BB, List<ParallelCopy>> pCopy = new HashMap<>();
+            Map<BB, List<ParallelCopy>> pCopy = new LinkedHashMap<>();
             for (BB prebb : predecessors) {
                 if (prebb.getSuccessors().size() > 1) {
                     BB bbCopy = new BB(Lable.getLable(), "parallelcopy");

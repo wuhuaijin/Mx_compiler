@@ -14,7 +14,7 @@ import java.util.*;
 public class SSAConstructer extends Pass {
 
     Map<VirtualRegister, Integer> count = new LinkedHashMap<>();
-    Map<VirtualRegister, Set<BB>> defBlocks = new HashMap<>();
+    Map<VirtualRegister, Set<BB>> defBlocks = new LinkedHashMap<>();
     Map<VirtualRegister, Stack<Integer>> stack = new LinkedHashMap<>();
 
     public SSAConstructer(Module module) {
@@ -37,7 +37,7 @@ public class SSAConstructer extends Pass {
         function.getGlobals().clear();
 
         List<BB> preOrderBBList = function.getPreOrderBBList();
-        Set<VirtualRegister> varKill = new HashSet<>();
+        Set<VirtualRegister> varKill = new LinkedHashSet<>();
         for (var bb : preOrderBBList) {
             varKill.clear();
             for (var inst = bb.getHead(); inst != null; inst = inst.getNext()) {
@@ -57,7 +57,7 @@ public class SSAConstructer extends Pass {
 
     public void insertPhi(Function function) {
         Queue<BB> workList = new LinkedList<>();
-        Set<BB> visited = new HashSet<>();
+        Set<BB> visited = new LinkedHashSet<>();
         for (VirtualRegister reg : function.getGlobals()) {
             visited.clear();
             workList.addAll(defBlocks.getOrDefault(reg, Collections.emptySet()));

@@ -22,8 +22,8 @@ abstract public class Pass {
     abstract public boolean run();
 
 
-    protected Map<Register, BaseInstruction> def = new HashMap<>();
-    protected Map<Register, Set<BaseInstruction>> used = new HashMap<>();
+    protected Map<Register, BaseInstruction> def = new LinkedHashMap<>();
+    protected Map<Register, Set<BaseInstruction>> used = new LinkedHashMap<>();
 
     public void computeDefAndUseChain(Function function) {
         for (var bb : function.getPreOrderBBList()) {
@@ -31,10 +31,10 @@ abstract public class Pass {
                 VirtualRegister defReg = inst.getDefOpr();
                 if (defReg != null) {
                     def.put(defReg, inst);
-                    if (!used.containsKey(defReg)) used.put(defReg, new HashSet<>());
+                    if (!used.containsKey(defReg)) used.put(defReg, new LinkedHashSet<>());
                 }
                 for (var reg : inst.getUseOpr()) {
-                    if (!used.containsKey(reg)) used.put(reg, new HashSet<>());
+                    if (!used.containsKey(reg)) used.put(reg, new LinkedHashSet<>());
                     used.get(reg).add(inst);
                 }
 

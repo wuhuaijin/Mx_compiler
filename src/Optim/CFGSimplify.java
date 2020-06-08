@@ -81,7 +81,7 @@ public class CFGSimplify extends Pass{
     }
 
     public boolean removeUnreachableBlock(Function func) {
-        HashSet<BB> visitedBBSet = new HashSet<>();
+        HashSet<BB> visitedBBSet = new LinkedHashSet<>();
         Queue<BB> bbQueue = new LinkedList<>();
         visitedBBSet.add(func.getInBB());
         bbQueue.add(func.getInBB());

@@ -22,7 +22,7 @@ public class FuncInline {
         this.module = module;
         this.functionList = new ArrayList<>();
         this.visitedFunc = new LinkedHashSet<>();
-        this.funcCallList = new HashMap<>();
+        this.funcCallList = new LinkedHashMap<>();
     }
 
     public void run() {
@@ -121,8 +121,8 @@ public class FuncInline {
         ins.setNext(null);
         ins.delete();
 
-        Map<Operand, Operand> tmpOprMap = new HashMap<>();
-        Map<BB, BB> tmpBBMap = new HashMap<>();
+        Map<Operand, Operand> tmpOprMap = new LinkedHashMap<>();
+        Map<BB, BB> tmpBBMap = new LinkedHashMap<>();
 
         callee_func.getParas().forEach(i->copyOpr(tmpOprMap, i));
         copyOpr(tmpOprMap, callee_func.getObj());

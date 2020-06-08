@@ -54,7 +54,7 @@ public class Main {
                 ir.visit(((ProgNode) astRoot));
                 Module module = ir.getModule();
                 FuncInline funcInline = new FuncInline(module);
-                funcInline.run();
+//                funcInline.run();
                 GlobalVarResolve globalVarResolve = new GlobalVarResolve(module);
                 globalVarResolve.run();
 

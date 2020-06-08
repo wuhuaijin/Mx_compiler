@@ -140,6 +140,9 @@ public class SCCP extends Pass implements IRVisitor {
             while (!workList.isEmpty()) {
                 count++;
                 Register register = workList.poll();
+                if (used.get(register) == null) {
+                    continue;
+                }
                 used.get(register).forEach(i->i.accept(this));
             }
 //            System.out.println(count);

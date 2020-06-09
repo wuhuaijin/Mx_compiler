@@ -77,4 +77,12 @@ public class Load extends Inst {
     public Register getSr1() {
         return sr1;
     }
+
+    public void setSr1(Register sr1) {
+        this.sr1 = sr1;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
 }

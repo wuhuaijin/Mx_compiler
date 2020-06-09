@@ -104,6 +104,7 @@ public class SCCP extends Pass implements IRVisitor {
     }
 
     private void setConstant(Register register, Const _const) {
+        if (register == null) return;
         if (getStatus(register).status == Status.UNDEFINED) {
             operandStatusMap.replace(register, new OperandStatus(_const, Status.CONSTANT));
             workList.add(register);

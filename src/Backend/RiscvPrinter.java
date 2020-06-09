@@ -78,7 +78,9 @@ public class RiscvPrinter implements RiscvVisitor {
     public void visit(BackFunction function) {
         print3("\n.globl\t" + function.getId());
         print2(function.getId() + ":");
-        function.getBbList().forEach(this::visit);
+        function.makeBBList();
+        printLessJump(function.getInbb(), new LinkedHashSet<>());
+        print2("");
     }
 
     public void visit(BackBB bb) {
@@ -129,7 +131,7 @@ public class RiscvPrinter implements RiscvVisitor {
                 print3("lw\t" + inst.getRd().getId() + ", " + inst.getSr1().getId());
             }
             else if (inst.getSr1() instanceof PhyRegister) {
-                print3("lw\t" + inst.getRd().getId() + ", 0(" + inst.getSr1().getId() + ")");
+                print3("lw\t" + inst.getRd().getId() + ", "+ inst.getSize() +"(" + inst.getSr1().getId() + ")");
             }
         }
     }
@@ -151,7 +153,7 @@ public class RiscvPrinter implements RiscvVisitor {
         }
         else {
             if (inst.getRd() != null) {
-                print3("sw\t" + inst.getSrc().getId() + ", 0(" + inst.getRd().getId() + ")");
+                print3("sw\t" + inst.getSrc().getId() + ", "+ inst.getSize() +"(" + inst.getRd().getId() + ")");
             }
             else if (inst.getPtr() != null) {
                 if (((StackAllocate) inst.getPtr()).getOffset() > 2047) {
@@ -175,4 +177,32 @@ public class RiscvPrinter implements RiscvVisitor {
         print3(inst.getOp().toString().toLowerCase() + "\t"
                 + inst.getRd().getId() + ", " + inst.getRs1().getId() + ", " + inst.getRs2().getId());
     }
+
+
+    public void printLessJump(BackBB bb, Set<BackBB> visited) {
+        var tail = bb.getTail();
+        if (tail instanceof Return) {
+            visit(bb);
+            visited.add(bb);
+            return;
+        }
+        BackBB fistbb = null;
+        if (!visited.contains(((Jump) tail).getTarget())) {
+            tail.delete();
+            fistbb = ((Jump) tail).getTarget();
+        }
+
+        visit(bb);
+        visited.add(bb);
+
+        if (fistbb != null) printLessJump(fistbb, visited);
+        for (var i : bb.getSuccessors()) {
+            if (!visited.contains(i)) {
+                printLessJump(i, visited);
+            }
+        }
+
+    }
+
+
 }

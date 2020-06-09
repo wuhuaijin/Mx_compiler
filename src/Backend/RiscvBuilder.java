@@ -21,7 +21,7 @@ import IR.Operand.*;
 
 import java.util.*;
 
-public class RiscvBuilder implements IRVisitor {
+public class RiscvBuilder extends BackPass implements IRVisitor {
 
     final int MAX_IMM = (1 << 11) - 1;
     final int MIN_IMM = -(1 << 11);
@@ -37,7 +37,6 @@ public class RiscvBuilder implements IRVisitor {
     private Map<String, VirtualRegister> calleeMap = new LinkedHashMap<>();
 
     public static BackFunction mallocFunction = new BackFunction("malloc", true);
-
 
     public BackModule getModule() {
         return module;
@@ -57,9 +56,61 @@ public class RiscvBuilder implements IRVisitor {
             }
         }
         for (var func : mo1.getFuncs()) {
-            if (!func.isSystem()) visit(func);
+            if (func.isSystem()) continue;
+            visit(func);
+            optim(funcTofunc.get(func));
         }
 
+    }
+
+
+    private void optim(BackFunction function) {
+        computeDefAndUseChain(function);
+        for (var bb : function.getBbList()) {
+            for (var inst = bb.getHead(); inst != null; inst = inst.getNext()) {
+                if (inst instanceof Backend.Inst.Load && ((Backend.Inst.Load) inst).getSr1() != null) {
+                    Register ptr = ((Backend.Inst.Load) inst).getSr1();
+
+                    if (def.get(ptr) == null || used.get(ptr) == null) continue;
+                    if (def.get(ptr).size() == 1 && used.get(ptr).size() == 1) {
+                        var defIns = def.get(ptr).iterator().next();
+
+                        if (defIns instanceof Backend.Inst.Move) {
+                            ((Backend.Inst.Load) inst).setSr1(((Backend.Inst.Move) defIns).getSrc());
+                            ((Backend.Inst.Load) inst).setSize(0);
+                            defIns.delete();
+                        }
+                        else if (defIns instanceof ImmAction) {
+                            assert ((ImmAction) defIns).getOp() == ImmAction.Op.ADDI;
+                            ((Backend.Inst.Load) inst).setSr1(((ImmAction) defIns).getRs1());
+                            ((Backend.Inst.Load) inst).setSize(((ImmAction) defIns).getImm().getValue());
+                            defIns.delete();
+                        }
+
+                    }
+                }
+                if (inst instanceof Backend.Inst.Store && ((Backend.Inst.Store) inst).getRd() != null) {
+                    Register ptr = ((Backend.Inst.Store) inst).getRd();
+
+                    if (def.get(ptr) == null || used.get(ptr) == null) continue;
+                    if (def.get(ptr).size() == 1 && used.get(ptr).size() == 1) {
+                        var defIns = def.get(ptr).iterator().next();
+
+                        if (defIns instanceof Backend.Inst.Move) {
+                            ((Backend.Inst.Store) inst).setRd(((Backend.Inst.Move) defIns).getSrc());
+                            ((Backend.Inst.Store) inst).setSize(0);
+                            defIns.delete();
+                        }
+                        else if (defIns instanceof ImmAction) {
+                            assert ((ImmAction) defIns).getOp() == ImmAction.Op.ADDI;
+                            ((Backend.Inst.Store) inst).setRd(((ImmAction) defIns).getRs1());
+                            ((Backend.Inst.Store) inst).setSize(((ImmAction) defIns).getImm().getValue());
+                            defIns.delete();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -86,7 +137,7 @@ public class RiscvBuilder implements IRVisitor {
             curbb.addInst(new Backend.Inst.Move((Register) function.getParas().get(i), module.getPhyRegisterHashMap().get("a" + i)));
         }
         for (int i = 8; i < function.getParas().size(); ++i) {
-            curbb.addInst(new Backend.Inst.Load(new StackAllocate(curFunc, true, 4*(i-8)), ((Register) function.getParas().get(i)), 4));
+            curbb.addInst(new Backend.Inst.Load(new StackAllocate(curFunc, true, 4*(i-8)), ((Register) function.getParas().get(i)), 0));
         }
 
         function.getPreOrderBBList().forEach(this::visit);
@@ -343,7 +394,7 @@ public class RiscvBuilder implements IRVisitor {
         }
         for (int i = 8; i < inst.getParas().size(); ++i) {
 //            curbb.addInst(new Backend.Inst.Store(new StackAllocate(curFunc, false, 4*(i-8)), toReg(paraList.get(i)), null ,4));
-            curbb.addInst(new Backend.Inst.Store(new StackAllocate(curFunc, false), toReg(paraList.get(i)), null ,4));
+            curbb.addInst(new Backend.Inst.Store(new StackAllocate(curFunc, false), toReg(paraList.get(i)), null ,0));
 
         }
         curbb.addInst(new Backend.Inst.Call(funcTofunc.get(inst.getFunc())));
@@ -364,7 +415,7 @@ public class RiscvBuilder implements IRVisitor {
 
     @Override
     public void visit(Load inst) {
-        curbb.addInst(new Backend.Inst.Load((Register) inst.getPointer(), (Register) inst.getReg(), 4));
+        curbb.addInst(new Backend.Inst.Load((Register) inst.getPointer(), (Register) inst.getReg(), 0));
     }
 
 
@@ -382,10 +433,10 @@ public class RiscvBuilder implements IRVisitor {
     @Override
     public void visit(Store inst) {
         if (inst.getPointer() instanceof Pointer && ((Pointer) inst.getPointer()).isGlobal()) {
-            curbb.addInst(new Backend.Inst.Store((Register) inst.getPointer(), toReg(inst.getVal()), new Register("store_tmp"), 4));
+            curbb.addInst(new Backend.Inst.Store((Register) inst.getPointer(), toReg(inst.getVal()), new Register("store_tmp"), 0));
         }
         else {
-            curbb.addInst(new Backend.Inst.Store((Register) inst.getPointer(), toReg(inst.getVal()), null, 4));
+            curbb.addInst(new Backend.Inst.Store((Register) inst.getPointer(), toReg(inst.getVal()), null, 0));
         }
     }
 
@@ -423,4 +474,5 @@ public class RiscvBuilder implements IRVisitor {
 
     @Override
     public void visit(Register register) { }
+
 }

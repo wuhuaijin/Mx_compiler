@@ -488,7 +488,7 @@ public class RegAllocator {
                     if (reg.spillAddr != null) {
 
                         var a = new Int32("spill_" + reg.getId());
-                        inst.pushFront(new Load(reg.spillAddr, a, 4));
+                        inst.pushFront(new Load(reg.spillAddr, a, 0));
                         inst.replaceUseReg(reg, a);
                     }
 
@@ -498,7 +498,7 @@ public class RegAllocator {
                     var defReg = inst.getDefReg();
                     var tmp = new Int32("spill_" + inst.getDefReg().getId());
                     inst.replaceDefReg(tmp);
-                    inst.pushBack(new Store(defReg.spillAddr, tmp, null, 4));
+                    inst.pushBack(new Store(defReg.spillAddr, tmp, null, 0));
                 }
             }
         }
@@ -524,7 +524,7 @@ public class RegAllocator {
                     if (reg.spillAddr != null) {
 
                         var a = new Int32("spill_" + reg.getId());
-                        inst.pushFront(new Load(reg.spillAddr, a, 4));
+                        inst.pushFront(new Load(reg.spillAddr, a, 0));
                         inst.replaceUseReg(reg, a);
                         a.color = colorSet.iterator().next();
                         colorSet.remove(a.color);
@@ -536,7 +536,7 @@ public class RegAllocator {
                     var defReg = inst.getDefReg();
                     var tmp = new Int32("spill_" + inst.getDefReg().getId());
                     inst.replaceDefReg(tmp);
-                    inst.pushBack(new Store(defReg.spillAddr, tmp, null, 4));
+                    inst.pushBack(new Store(defReg.spillAddr, tmp, null, 0));
                     tmp.color = colorSet.iterator().next();
                     colorSet.remove(tmp.color);
                 }

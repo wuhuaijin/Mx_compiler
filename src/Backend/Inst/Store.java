@@ -82,4 +82,12 @@ public class Store extends Inst {
     public Register getRd() {
         return rd;
     }
+
+    public void setRd(Register rd) {
+        this.rd = rd;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
 }

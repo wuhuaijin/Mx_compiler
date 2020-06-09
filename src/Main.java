@@ -28,7 +28,7 @@ public class Main {
 //        System.out.println("hello world");
 
         try {
-            InputStream inputStream = new FileInputStream("program.txt");
+            InputStream inputStream = new FileInputStream("code.txt");
 //            InputStream inputStream = new FileInputStream("codegen/sorting/bubble_sort.mx");
             CharStream charStream = CharStreams.fromStream(inputStream);
 

@@ -18,6 +18,8 @@ public class FuncInline {
     private Set<Function> visitedFunc;
     private Map<Function, List<Call>> funcCallList;
 
+    final private int RECUR_TIME = 1;
+
     public FuncInline(Module module) {
         this.module = module;
         this.functionList = new ArrayList<>();
@@ -32,6 +34,7 @@ public class FuncInline {
         visitedFunc.addAll(functionList);
         removeFunc();
         NoneRecursiveInline();
+//        RecursiveInline();
     }
 
     private void removeFunc() {
@@ -60,6 +63,30 @@ public class FuncInline {
                             module.getFuncs().remove(callee);
                             visitedFunc.remove(callee);
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private void RecursiveInline() {
+        boolean changed = true;
+        int cnt = 0;
+        while (changed && cnt < RECUR_TIME) {
+            changed = false;
+            cnt++;
+
+            for (var func : functionList) {
+                if (!module.getFuncs().contains(func)) continue;
+                findCall();
+                Collections.reverse(funcCallList.get(func));
+                for (var inst : funcCallList.get(func)) {
+                    Function callee = inst.getFunc();
+                    if (callee.isSystem()) continue;
+                    if (!func.getFuncName().equals("__init")) {
+                        changed = true;
+                        visitedFunc.add(func);
+                        inline(inst, func);
                     }
                 }
             }
@@ -160,9 +187,7 @@ public class FuncInline {
         }
 
 
-        if (exitBB.getLable().toString().equals("b_53")) {
-            int a = 0;
-        }
+
         if (b1.getTail() != null) b1.getTail().setIfTerminal(false);
         if (exitBB.getTail() != null) exitBB.getTail().setIfTerminal(false);
         b1.addInstruction(new Jump(b1, true, inBB));
@@ -188,6 +213,50 @@ public class FuncInline {
             }
         }
         else map.put(opr, opr);
+    }
+
+
+    public Function copyFunc(Function function) {
+        Map<BB, BB> tmpBBMap = new LinkedHashMap<>();
+        Map<Operand, Operand> regMap = new LinkedHashMap<>();
+
+        var copyFunc = new Function(function.getFuncName() + "copy");
+
+        function.setPreOrderBBList();
+        for (var bb : function.getPreOrderBBList()) {
+            tmpBBMap.put(bb, new BB(Lable.getLable(), "copy"));
+        }
+        copyFunc.setInBB(tmpBBMap.get(function.getInBB()));
+        copyFunc.setOutBB(tmpBBMap.get(function.getOutBB()));
+
+        if (function.getObj() != null) {
+            copyOpr(regMap, function.getObj());
+            copyFunc.setObj(((Register) regMap.get(function.getObj())));
+        }
+        for (var i : function.getParas()) {
+            copyOpr(regMap, i);
+            copyFunc.getParas().add(regMap.get(i));
+        }
+
+        for (var bb : function.getPreOrderBBList()) {
+            var newbb = tmpBBMap.get(bb);
+            for (var inst = bb.getHead(); inst != null; inst = inst.getNext()) {
+                var oprList = new ArrayList<Operand>();
+                var bbList = new ArrayList<BB>();
+                for (var i : inst.getOpr()) {
+                    copyOpr(regMap, i);
+                    oprList.add(regMap.get(i));
+                }
+                for (var i : inst.getBB()) {
+                    bbList.add(tmpBBMap.get(i));
+                }
+                newbb.addInstruction(inst.copySelf(newbb, inst.isIfTerminal(), oprList, bbList));
+            }
+            newbb.getTail().setIfTerminal(true);
+        }
+
+        copyFunc.setPreOrderBBList();
+        return copyFunc;
     }
 
 }

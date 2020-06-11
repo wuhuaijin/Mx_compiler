@@ -20,6 +20,7 @@ public class IRBuilder implements ASTVisitor {
     private Stack<BB> loopBreak;
     private Scope scope;
     private ArrayList<Return> funcRets;
+    private boolean ifReturn = false;
 
     public IRBuilder(Scope scope) {
         this.scope = scope;
@@ -132,7 +133,7 @@ public class IRBuilder implements ASTVisitor {
         boolean hasRetVal = true;
         if (node.getTypetype().equals(new VoidType()) || node.getTypetype().equals(new NullType())) hasRetVal = false;
 
-        if (!(currentBB.getTail() instanceof Return)) {
+        if (!(currentBB.getTail() instanceof Return) && !(currentBB.getTail() instanceof Jump)) {
             if (hasRetVal) currentBB.addLastInstruction(new Return(currentBB, true, new Const(0)));
             else currentBB.addLastInstruction(new Return(currentBB, true, null));
             funcRets.add((Return) currentBB.getTail());
@@ -268,6 +269,10 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(ReturnStatNode node) {
         if (node.getReturnExpr() != null) {
+            if (node.getReturnExpr() instanceof FunccallExprNode) {
+//                if (((FunccallExprNode) node.getReturnExpr()).getFuncName().equals(currentfunction.getFuncName())) ifReturn = true;
+                if (((FuncSymbol) ((FunccallExprNode) node.getReturnExpr()).getFuncName().getSymbol()).getFunction() == currentfunction) ifReturn = true;
+            }
             node.getReturnExpr().accept(this);
             currentBB.addInstruction(new Return(currentBB, true, change(node.getReturnExpr().getResultOpr())));
         }
@@ -432,6 +437,23 @@ public class IRBuilder implements ASTVisitor {
         if (func.isMethod()) {
             if (node.getFuncName() instanceof MemberExprNode) obj = change(((MemberExprNode) node.getFuncName()).getExpr().getResultOpr());
             else obj = currentfunction.getObj();
+        }
+
+
+
+        if (func == currentfunction && ifReturn) {
+            ArrayList<Int32> tmpList = new ArrayList<>();
+            ifReturn = false;
+            for (var i = 0; i < paras.size(); i++) {
+                var tmp = new Int32("para_tmp");
+                currentBB.addInstruction(new Move(currentBB, false, paras.get(i), tmp));
+                tmpList.add(tmp);
+            }
+            for (var i = 0; i < paras.size(); i++) {
+                currentBB.addInstruction(new Move(currentBB, false, tmpList.get(i), currentfunction.getParas().get(i)));
+            }
+            currentBB.addInstruction(new Jump(currentBB, true, currentfunction.getInBB()));
+            return;
         }
         currentBB.addInstruction(new Call(currentBB, false, res, func, paras, obj));
         node.setResultOpr(res);

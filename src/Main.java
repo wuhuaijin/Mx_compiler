@@ -58,6 +58,7 @@ public class Main {
                 GlobalVarResolve globalVarResolve = new GlobalVarResolve(module);
                 globalVarResolve.run();
 
+
                 new CFGSimplify(ir.getModule()).run();
                 new DTree(ir.getModule()).run();
                 new SSAConstructer(ir.getModule()).run();

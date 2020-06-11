@@ -77,6 +77,8 @@ public class GlobalVarResolve {
                         if (opr instanceof Register && ((Register) opr).getPtr() != null) {
                             globalVars.add(((Register) opr).getPtr());
                             if (ins.getDefOpr() == opr) {
+//                                defVars.add(opr);
+                                defVars.add(((Register) opr).getPtr());
                                 defVars.add(opr);
                             }
                         }
@@ -112,7 +114,17 @@ public class GlobalVarResolve {
                 else {
                     func.getInBB().addInstructionAtFront(new Load(func.getInBB(), false, tmpMap.get(i), i));
                 }
-                if (defVarInFunc.get(func).contains(i)) func.getOutBB().getTail().pushFront(new Store(func.getOutBB(), false, tmpMap.get(i), i));
+                if (defVarInFunc.get(func).contains(i)) {
+                    func.getOutBB().getTail().pushFront(new Store(func.getOutBB(), false, tmpMap.get(i), i));
+                }
+                boolean flag = true;
+                if (defVarInFunc.get(func).contains(i)) flag = false;
+                for (var j : calleeList.get(func)) {
+                    if (defVarInFunc.get(j).contains(i)) flag = false;
+                }
+                if (!flag || func.getFuncName().equals("main")) {
+                    func.getOutBB().getTail().pushFront(new Store(func.getOutBB(), false, tmpMap.get(i), i));
+                }
             }
         }
         for (var func : funcList) {
@@ -125,10 +137,12 @@ public class GlobalVarResolve {
                         var tmpMap = tmpVarMapInFunc.get(func);
                         for (var i : calleeUsed) {
                             if (globalVar.contains(i) && !(ins.getPrev() instanceof Call && !((Call) ins.getPrev()).getFunc().isSystem())) {
+
                                 ins.pushFront(new Store(bb, ins.isIfTerminal(), tmpMap.get(i), i));
 
                             }
                             if (globalVar.contains(i) && !(ins.getNext() instanceof Call && !((Call) ins.getNext()).getFunc().isSystem())) {
+
                                 ins.pushBack(new Load(bb, ins.isIfTerminal(), tmpMap.get(i), i));
                             }
                         }

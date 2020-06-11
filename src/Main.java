@@ -68,9 +68,9 @@ public class Main {
                     changed |= new DCE(ir.getModule()).run();
 //                    changed |= new CFGSimplify(ir.getModule()).run();
                 }
-//
-//
-//
+////
+////
+////
                 new SomeTrick(ir.getModule()).run();
                 new SSADestructor(ir.getModule()).run();
                 new CFGSimplify(ir.getModule()).run();

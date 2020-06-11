@@ -17,25 +17,32 @@ public class FuncInline {
     private List<Function> functionList;
     private Set<Function> visitedFunc;
     private Map<Function, List<Call>> funcCallList;
+    private Map<Function, Integer> funcLen;
 
     final private int RECUR_TIME = 1;
+    final private int WORTH_CODE_LEN = 1200;
 
     public FuncInline(Module module) {
         this.module = module;
         this.functionList = new ArrayList<>();
         this.visitedFunc = new LinkedHashSet<>();
         this.funcCallList = new LinkedHashMap<>();
+        this.funcLen = new LinkedHashMap<>();
     }
 
     public void run() {
         for (var i : module.getFuncs()) {
             if (!i.isSystem()) functionList.add(i);
         }
+
         visitedFunc.addAll(functionList);
         removeFunc();
+        findCall();
         NoneRecursiveInline();
-//        RecursiveInline();
+        RecursiveInline();
     }
+
+
 
     private void removeFunc() {
         for (var i : functionList) {
@@ -55,6 +62,8 @@ public class FuncInline {
                     Function callee = inst.getFunc();
                     if (callee.isSystem()) continue;
                     if (!isRecursive(callee) && !func.getFuncName().equals("__init")) {
+                        if (funcLen.get(func) + funcLen.get(callee) > WORTH_CODE_LEN) continue;
+                        funcLen.put(func, funcLen.get(func) + funcLen.get(callee));
                         changed = true;
                         visitedFunc.add(func);
                         inline(inst, func);
@@ -84,6 +93,8 @@ public class FuncInline {
                     Function callee = inst.getFunc();
                     if (callee.isSystem()) continue;
                     if (!func.getFuncName().equals("__init")) {
+                        if (funcLen.get(func) + funcLen.get(callee) > WORTH_CODE_LEN) continue;
+                        funcLen.put(func, funcLen.get(func) + funcLen.get(callee));
                         changed = true;
                         visitedFunc.add(func);
                         inline(inst, func);
@@ -100,18 +111,22 @@ public class FuncInline {
         return false;
     }
 
+
     private void findCall() {
         for (var i : visitedFunc) {
             i.setPreOrderBBList();
             ArrayList<Call> callList = new ArrayList<>();
+            int cnt = 0;
             for (var j : i.getPreOrderBBList()) {
                 for (var ins = j.getHead(); ins != null; ins = ins.getNext()) {
+                    cnt++;
                     if (ins instanceof Call) {
                         callList.add((Call) ins);
                     }
                 }
             }
             funcCallList.put(i, callList);
+            funcLen.put(i, cnt);
         }
         visitedFunc.clear();
     }
@@ -133,6 +148,10 @@ public class FuncInline {
 
     private void inline(Call ins, Function caller_func) {
         Function callee_func = ins.getFunc();
+
+        if (callee_func == caller_func){
+            callee_func = copyFunc(callee_func);
+        }
         //split bb
         BB b1 = ins.getBasicBlock();
         BB b2 = new BB(Lable.getLable(), "splitBB");

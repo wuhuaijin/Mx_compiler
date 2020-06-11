@@ -72,12 +72,12 @@ public class RegAllocator {
             new LiveAnalysis(func, module).run();
             build(func);
 //            System.out.println(initial.size());
-            if (initial.size() > 3500) {
+            if (initial.size() > 5000) {
                 rewriteProgram2(func);
                 break;
             }
             makeWorkList();
-//            int number = 0;
+            int number = 0;
             while (!simplifyWorkList.isEmpty() || !workListMoves.isEmpty() || !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()){
 //                if (!selectStack.isEmpty()) {
 //                    int a = 1;
@@ -111,7 +111,7 @@ public class RegAllocator {
         }
         allocate(func);
     }
-    
+
 
     public void init() {
         initial.clear();
@@ -426,7 +426,7 @@ public class RegAllocator {
 
     private void selectSpill(){
         // random policy
-		var reg = spillWorkList.iterator().next();
+        var reg = spillWorkList.iterator().next();
         assert reg != null;
         spillWorkList.remove(reg);
         simplifyWorkList.add(reg);

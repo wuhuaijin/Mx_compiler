@@ -12,6 +12,7 @@ public class GlobalVarResolve {
     Module module;
     private List<Function> funcList = new ArrayList<>();
     private Map<Function, Set<Operand>> globalVarInFunc = new LinkedHashMap<>();
+    private Map<Function, Set<Operand>> defVarInFunc = new LinkedHashMap<>();
     private Map<Function, Set<Function>> calleeList = new LinkedHashMap<>();
     private Map<Function, Set<Operand>> globalVarRecurInFun = new LinkedHashMap<>();
     private Map<Function, Map<Operand, Operand>> tmpVarMapInFunc = new LinkedHashMap<>();
@@ -63,7 +64,9 @@ public class GlobalVarResolve {
         for (var func : funcList) {
             Set<Operand> globalVars = new LinkedHashSet<>();
             Set<Function> calleeFunction = new LinkedHashSet<>();
+            Set<Operand> defVars = new LinkedHashSet<>();
             globalVarInFunc.put(func, globalVars);
+            defVarInFunc.put(func, defVars);
             for (var bb : func.getPreOrderBBList()) {
                 for (var ins = bb.getHead(); ins != null; ins = ins.getNext()) {
                     if (ins instanceof Call && !((Call)ins).getFunc().isSystem())
@@ -73,6 +76,9 @@ public class GlobalVarResolve {
                     for (Operand opr : oprList){
                         if (opr instanceof Register && ((Register) opr).getPtr() != null) {
                             globalVars.add(((Register) opr).getPtr());
+                            if (ins.getDefOpr() == opr) {
+                                defVars.add(opr);
+                            }
                         }
                     }
                 }
@@ -106,7 +112,7 @@ public class GlobalVarResolve {
                 else {
                     func.getInBB().addInstructionAtFront(new Load(func.getInBB(), false, tmpMap.get(i), i));
                 }
-                func.getOutBB().getTail().pushFront(new Store(func.getOutBB(), false, tmpMap.get(i), i));
+                if (defVarInFunc.get(func).contains(i)) func.getOutBB().getTail().pushFront(new Store(func.getOutBB(), false, tmpMap.get(i), i));
             }
         }
         for (var func : funcList) {
@@ -118,8 +124,11 @@ public class GlobalVarResolve {
                         var calleeUsed = globalVarRecurInFun.get(((Call) ins).getFunc());
                         var tmpMap = tmpVarMapInFunc.get(func);
                         for (var i : calleeUsed) {
-                            if (globalVar.contains(i)) {
+                            if (globalVar.contains(i) && !(ins.getPrev() instanceof Call && !((Call) ins.getPrev()).getFunc().isSystem())) {
                                 ins.pushFront(new Store(bb, ins.isIfTerminal(), tmpMap.get(i), i));
+
+                            }
+                            if (globalVar.contains(i) && !(ins.getNext() instanceof Call && !((Call) ins.getNext()).getFunc().isSystem())) {
                                 ins.pushBack(new Load(bb, ins.isIfTerminal(), tmpMap.get(i), i));
                             }
                         }
